@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบเช็คชื่อและคะแนนนักเรียน</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Kanit', sans-serif; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div id="app" class="container mx-auto p-4">
+
+        <div id="login-page">
+            <div class="max-w-md mx-auto mt-20 bg-white p-8 rounded-xl shadow-lg">
+                <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">ระบบเช็คชื่อและคะแนน</h1>
+                <div class="space-y-4">
+                    <div>
+                        <label for="studentIdLogin" class="block text-sm font-medium text-gray-700">รหัสนักเรียน</label>
+                        <input type="text" id="studentIdLogin" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="เช่น s001">
+                    </div>
+                    <button id="login-btn" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class="fas fa-sign-in-alt mr-2"></i>เข้าสู่ระบบ (สำหรับนักเรียน)
+                    </button>
+                </div>
+                <div class="mt-6 text-center">
+                    <button id="admin-login-btn" class="w-full bg-gray-700 text-white py-2 px-4 rounded-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                        <i class="fas fa-user-shield mr-2"></i>เข้าสู่ระบบ (สำหรับผู้สอน)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="admin-page" class="hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold text-gray-800">หน้าจัดการข้อมูล (สำหรับผู้สอน)</h1>
+                <button id="logout-btn-admin" class="bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600"><i class="fas fa-sign-out-alt mr-2"></i>ออกจากระบบ</button>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-lg mb-6">
+                <h2 class="text-2xl font-semibold mb-4 text-gray-700">จัดการนักเรียน</h2>
+                <form id="student-form" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <input type="hidden" id="student-id-edit">
+                    <div>
+                        <label for="student-id" class="block text-sm font-medium text-gray-700">รหัสนักเรียน</label>
+                        <input type="text" id="student-id" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                    </div>
+                    <div>
+                        <label for="student-name" class="block text-sm font-medium text-gray-700">ชื่อ-สกุล</label>
+                        <input type="text" id="student-name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                    </div>
+                    <button type="submit" class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700"><i class="fas fa-plus-circle mr-2"></i><span id="student-form-btn-text">เพิ่มนักเรียน</span></button>
+                </form>
+                <div class="mt-4 overflow-x-auto">
+                    <table class="min-w-full bg-white">
+                        <thead class="bg-gray-200">
+                            <tr>
+                                <th class="py-2 px-4">รหัสนักเรียน</th>
+                                <th class="py-2 px-4">ชื่อ-สกุล</th>
+                                <th class="py-2 px-4">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="student-list">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h2 class="text-2xl font-semibold mb-4 text-gray-700">จัดการรายวิชา</h2>
+                    <form id="subject-form" class="flex gap-4">
+                        <input type="text" id="subject-name" placeholder="ชื่อวิชา เช่น คณิตศาสตร์" class="flex-grow px-3 py-2 border border-gray-300 rounded-md" required>
+                        <button type="submit" class="bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700"><i class="fas fa-book mr-2"></i>เพิ่มวิชา</button>
+                    </form>
+                    <ul id="subject-list" class="mt-4 space-y-2"></ul>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h2 class="text-2xl font-semibold mb-4 text-gray-700">จัดการงาน/การบ้าน</h2>
+                    <form id="assignment-form" class="space-y-4">
+                        <div>
+                            <label for="assignment-subject" class="block text-sm font-medium text-gray-700">เลือกวิชา</label>
+                            <select id="assignment-subject" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required></select>
+                        </div>
+                        <div>
+                            <label for="assignment-name" class="block text-sm font-medium text-gray-700">ชื่องาน</label>
+                            <input type="text" id="assignment-name" placeholder="เช่น การบ้านบทที่ 1" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                        </div>
+                        <div>
+                            <label for="assignment-max-score" class="block text-sm font-medium text-gray-700">คะแนนเต็ม</label>
+                            <input type="number" id="assignment-max-score" min="1" placeholder="เช่น 10" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                        </div>
+                        <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700"><i class="fas fa-tasks mr-2"></i>เพิ่มงาน</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-lg">
+                 <h2 class="text-2xl font-semibold mb-4 text-gray-700">เช็คชื่อและให้คะแนน (วันที่: <span id="current-date"></span>)</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white border">
+                        <thead id="score-table-head" class="bg-gray-800 text-white">
+                            </thead>
+                        <tbody id="score-table-body">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="student-page" class="hidden">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800">หน้าแสดงผล (สำหรับนักเรียน)</h1>
+                    <p id="student-welcome" class="text-xl text-gray-600"></p>
+                </div>
+                <button id="logout-btn-student" class="bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600"><i class="fas fa-sign-out-alt mr-2"></i>ออกจากระบบ</button>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
+                    <h2 class="text-2xl font-semibold mb-4 text-gray-700">สรุปคะแนนและงานที่ขาดส่ง</h2>
+                    <div id="student-scores" class="space-y-6">
+                        </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h2 class="text-2xl font-semibold mb-4 text-gray-700">ประวัติการเข้าเรียน</h2>
+                    <ul id="student-attendance-log" class="space-y-2">
+                         </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    // ====================================================== //
+    //                     APP STATE & DATA                   //
+    // ====================================================== //
+
+    let state = {
+        students: [],
+        subjects: [],
+        assignments: [],
+        scores: [],
+        attendance: []
+    };
+
+    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD format
+
+    function loadData() {
+        const storedData = JSON.parse(localStorage.getItem('studentAppData'));
+        if (storedData) {
+            state = storedData;
+        } else {
+            // Default data for first time use
+            state = {
+                students: [
+                    { id: 's001', name: 'เด็กชายมานะ ใจดี' },
+                    { id: 's002', name: 'เด็กหญิงปิติ ยินดี' },
+                ],
+                subjects: [
+                    { id: 'subj01', name: 'คณิตศาสตร์' },
+                    { id: 'subj02', name: 'วิทยาศาสตร์' },
+                ],
+                assignments: [
+                    { id: 'a01', subjectId: 'subj01', name: 'การบ้านบทที่ 1', maxScore: 10 },
+                    { id: 'a02', subjectId: 'subj01', name: 'สอบเก็บคะแนนครั้งที่ 1', maxScore: 20 },
+                    { id: 'a03', subjectId: 'subj02', name: 'รายงานทดลอง', maxScore: 15 },
+                ],
+                scores: [
+                    { studentId: 's001', assignmentId: 'a01', score: 8 },
+                    { studentId: 's001', assignmentId: 'a03', score: 12 },
+                    { studentId: 's002', assignmentId: 'a01', score: 9 },
+                ],
+                attendance: [
+                    { studentId: 's001', date: '2025-09-14', status: 'มา' },
+                    { studentId: 's002', date: '2025-09-14', status: 'ลา' },
+                ]
+            };
+        }
+    }
+
+    function saveData() {
+        localStorage.setItem('studentAppData', JSON.stringify(state));
+    }
+
+
+    // ====================================================== //
+    //                         UI RENDER                      //
+    // ====================================================== //
+
+    function renderAll() {
+        renderStudentList();
+        renderSubjectList();
+        renderAssignmentSubjectDropdown();
+        renderScoreTable();
+    }
+
+    function renderStudentList() {
+        const studentList = document.getElementById('student-list');
+        studentList.innerHTML = '';
+        state.students.forEach(student => {
+            const tr = document.createElement('tr');
+            tr.className = 'border-b';
+            tr.innerHTML = `
+                <td class="py-2 px-4">${student.id}</td>
+                <td class="py-2 px-4">${student.name}</td>
+                <td class="py-2 px-4">
+                    <button class="edit-student-btn bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600" data-id="${student.id}"><i class="fas fa-edit"></i></button>
+                    <button class="delete-student-btn bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600" data-id="${student.id}"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+            studentList.appendChild(tr);
+        });
+    }
+
+    function renderSubjectList() {
+        const subjectList = document.getElementById('subject-list');
+        subjectList.innerHTML = '';
+        state.subjects.forEach(subject => {
+            const li = document.createElement('li');
+            li.className = 'bg-gray-100 p-2 rounded flex justify-between items-center';
+            li.textContent = subject.name;
+            subjectList.appendChild(li);
+        });
+    }
+
+    function renderAssignmentSubjectDropdown() {
+        const select = document.getElementById('assignment-subject');
+        select.innerHTML = '<option value="">-- เลือกวิชา --</option>';
+        state.subjects.forEach(subject => {
+            const option = document.createElement('option');
+            option.value = subject.id;
+            option.textContent = subject.name;
+            select.appendChild(option);
+        });
+    }
+
+    function renderScoreTable() {
+        const thead = document.getElementById('score-table-head');
+        const tbody = document.getElementById('score-table-body');
+        
+        // Render Header
+        let headerHtml = '<tr><th class="py-3 px-4 text-left">ชื่อ-สกุล</th><th class="py-3 px-4 text-left">เช็คชื่อวันนี้</th>';
+        state.assignments.forEach(a => {
+            const subject = state.subjects.find(s => s.id === a.subjectId);
+            headerHtml += <th class="py-3 px-4 text-left">${subject.name}<br><span class="font-normal text-sm">${a.name} (${a.maxScore} คะแนน)</span></th>;
+        });
+        headerHtml += '</tr>';
+        thead.innerHTML = headerHtml;
+
+        // Render Body
+        tbody.innerHTML = '';
+        state.students.forEach(student => {
+            const tr = document.createElement('tr');
+            tr.className = 'border-b hover:bg-gray-50';
+            
+            let attendanceSelect = `
+                <select class="attendance-select border rounded p-1" data-student-id="${student.id}">
+                    <option value="มา">มา</option>
+                    <option value="ขาด">ขาด</option>
+                    <option value="ลา">ลา</option>
+                    <option value="สาย">สาย</option>
+                    <option value="โดด">โดด</option>
+                </select>
+            `;
+
+            let rowHtml = <td class="py-2 px-4 font-medium">${student.name}</td><td class="py-2 px-4">${attendanceSelect}</td>;
+
+            state.assignments.forEach(a => {
+                const score = state.scores.find(s => s.studentId === student.id && s.assignmentId === a.id);
+                rowHtml += `
+                    <td class="py-2 px-4">
+                        <input type="number" 
+                               class="score-input w-20 border rounded p-1" 
+                               min="0"
+                               max="${a.maxScore}"
+                               data-student-id="${student.id}" 
+                               data-assignment-id="${a.id}" 
+                               data-max-score="${a.maxScore}"
+                               value="${score ? score.score : ''}" 
+                               placeholder="-">
+                    </td>`;
+            });
+
+            tr.innerHTML = rowHtml;
+            tbody.appendChild(tr);
+
+            // Set current attendance status
+            const currentAttendance = state.attendance.find(att => att.studentId === student.id && att.date === today);
+            if(currentAttendance) {
+                tr.querySelector('.attendance-select').value = currentAttendance.status;
+            }
+        });
+    }
+
+    function renderStudentDashboard(studentId) {
+        const student = state.students.find(s => s.id === studentId);
+        if (!student) return;
+
+        document.getElementById('student-welcome').textContent = ยินดีต้อนรับ, ${student.name} (${student.id});
+        const scoresDiv = document.getElementById('student-scores');
+        const attendanceDiv = document.getElementById('student-attendance-log');
+        scoresDiv.innerHTML = '';
+        attendanceDiv.innerHTML = '';
+
+        // Render Scores
+        state.subjects.forEach(subject => {
+            const assignmentsInSubject = state.assignments.filter(a => a.subjectId === subject.id);
+            if (assignmentsInSubject.length === 0) return;
+
+            let subjectHtml = `<div class="border-l-4 border-blue-500 pl-4">
+                <h3 class="text-xl font-semibold text-blue-800">${subject.name}</h3>
+                <ul class="mt-2 space-y-2 list-disc list-inside">`;
+            
+            assignmentsInSubject.forEach(a => {
+                const score = state.scores.find(s => s.studentId === studentId && s.assignmentId === a.id);
+                if (score) {
+                    subjectHtml += <li class="text-green-700">${a.name}: <span class="font-bold">${score.score} / ${a.maxScore}</span> คะแนน</li>;
+                } else {
+                    subjectHtml += <li class="text-red-600">${a.name}: <span class="font-bold">ยังไม่ส่งงาน / ขาดสอบ</span> (เต็ม ${a.maxScore} คะแนน)</li>;
+                }
+            });
+
+            subjectHtml += '</ul></div>';
+            scoresDiv.innerHTML += subjectHtml;
+        });
+
+        // Render Attendance
+        const studentAttendance = state.attendance.filter(att => att.studentId === studentId).reverse();
+        if(studentAttendance.length > 0) {
+            studentAttendance.forEach(att => {
+                let statusClass = '';
+                switch(att.status) {
+                    case 'มา': statusClass = 'text-green-600'; break;
+                    case 'สาย': statusClass = 'text-yellow-600'; break;
+                    case 'ลา': statusClass = 'text-blue-600'; break;
+                    case 'ขาด': case 'โดด': statusClass = 'text-red-600'; break;
+                }
+                attendanceDiv.innerHTML += <li class="flex justify-between p-2 rounded ${att.date === today ? 'bg-blue-100' : ''}"><span>${att.date}</span> <span class="font-bold ${statusClass}">${att.status}</span></li>;
+            });
+        } else {
+            attendanceDiv.innerHTML = '<p class="text-gray-500">ไม่มีข้อมูลการเข้าเรียน</p>';
+        }
+    }
+
+
+    // ====================================================== //
+    //                      EVENT LISTENERS                   //
+    // ====================================================== //
+    
+    // Page Navigation
+    document.getElementById('login-btn').addEventListener('click', () => {
+        const studentId = document.getElementById('studentIdLogin').value;
+        const student = state.students.find(s => s.id === studentId);
+        if (student) {
+            showPage('student-page');
+            renderStudentDashboard(studentId);
+        } else {
+            alert('ไม่พบรหัสนักเรียนนี้ในระบบ');
+        }
+    });
+
+    document.getElementById('admin-login-btn').addEventListener('click', () => showPage('admin-page'));
+    document.getElementById('logout-btn-admin').addEventListener('click', () => showPage('login-page'));
+    document.getElementById('logout-btn-student').addEventListener('click', () => showPage('login-page'));
+
+    // Student Form
+    document.getElementById('student-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const id = document.getElementById('student-id').value;
+        const name = document.getElementById('student-name').value;
+        const editingId = document.getElementById('student-id-edit').value;
+
+        if (editingId) { // Update
+            const student = state.students.find(s => s.id === editingId);
+            student.id = id;
+            student.name = name;
+        } else { // Add
+             if (state.students.some(s => s.id === id)) {
+                alert('รหัสนักเรียนนี้มีอยู่แล้ว!');
+                return;
+            }
+            state.students.push({ id, name });
+        }
+        
+        saveData();
+        renderAll();
+        this.reset();
+        document.getElementById('student-id-edit').value = '';
+        document.getElementById('student-id').disabled = false;
+        document.getElementById('student-form-btn-text').textContent = 'เพิ่มนักเรียน';
+    });
+
+    // Student List Edit/Delete Buttons
+    document.getElementById('student-list').addEventListener('click', e => {
+        const id = e.target.closest('button')?.dataset.id;
+        if (!id) return;
+
+        if (e.target.closest('.edit-student-btn')) {
+            const student = state.students.find(s => s.id === id);
+            document.getElementById('student-id-edit').value = student.id;
+            document.getElementById('student-id').value = student.id;
+            document.getElementById('student-id').disabled = true; // Prevent changing ID while editing
+            document.getElementById('student-name').value = student.name;
+            document.getElementById('student-form-btn-text').textContent = 'บันทึกการแก้ไข';
+        }
+
+        if (e.target.closest('.delete-student-btn')) {
+            if(confirm(ต้องการลบนักเรียนรหัส ${id} ใช่หรือไม่?)) {
+                state.students = state.students.filter(s => s.id !== id);
+                // Also remove related scores and attendance
+                state.scores = state.scores.filter(s => s.studentId !== id);
+                state.attendance = state.attendance.filter(a => a.studentId !== id);
+                saveData();
+                renderAll();
+            }
+        }
+    });
+
+    // Subject Form
+    document.getElementById('subject-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const name = document.getElementById('subject-name').value;
+        const id = 'subj' + Date.now();
+        state.subjects.push({ id, name });
+        saveData();
+        renderSubjectList();
+        renderAssignmentSubjectDropdown();
+        this.reset();
+    });
+
+    // Assignment Form
+    document.getElementById('assignment-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const subjectId = document.getElementById('assignment-subject').value;
+        const name = document.getElementById('assignment-name').value;
+        const maxScore = parseInt(document.getElementById('assignment-max-score').value);
+        const id = 'a' + Date.now();
+        state.assignments.push({ id, subjectId, name, maxScore });
+        saveData();
+        renderScoreTable();
+        this.reset();
+    });
+
+    // Score Table (Attendance & Score Input)
+    document.getElementById('score-table-body').addEventListener('change', e => {
+        const target = e.target;
+        // Handle attendance change
+        if (target.classList.contains('attendance-select')) {
+            const studentId = target.dataset.studentId;
+            const status = target.value;
+            let attRecord = state.attendance.find(a => a.studentId === studentId && a.date === today);
+            if (attRecord) {
+                attRecord.status = status;
+            } else {
+                state.attendance.push({ studentId, date: today, status });
+            }
+            saveData();
+            console.log(Attendance for ${studentId} on ${today} is ${status});
+        }
+        
+        // Handle score change
+        if (target.classList.contains('score-input')) {
+            const studentId = target.dataset.studentId;
+            const assignmentId = target.dataset.assignmentId;
+            const maxScore = parseInt(target.dataset.maxScore);
+            const scoreValue = target.value;
+            
+            if (scoreValue === '') { // If score is cleared, remove the record
+                state.scores = state.scores.filter(s => !(s.studentId === studentId && s.assignmentId === assignmentId));
+                saveData();
+                return;
+            }
+            
+            const score = parseInt(scoreValue);
+
+            // !! VALIDATION RULE !!
+            if(score > maxScore) {
+                alert(คะแนนที่กรอก (${score}) ไม่สามารถมากกว่าคะแนนเต็ม (${maxScore}) ได้);
+                // Revert to old value
+                const oldScore = state.scores.find(s => s.studentId === studentId && s.assignmentId === assignmentId);
+                target.value = oldScore ? oldScore.score : '';
+                return;
+            }
+            
+            let scoreRecord = state.scores.find(s => s.studentId === studentId && s.assignmentId === assignmentId);
+            if (scoreRecord) {
+                scoreRecord.score = score;
+            } else {
+                state.scores.push({ studentId, assignmentId, score });
+            }
+            saveData();
+            console.log(Score for ${studentId} on assignment ${assignmentId} is ${score});
+        }
+    });
+
+    // ====================================================== //
+    //                     INITIALIZATION                     //
+    // ====================================================== //
+
+    function showPage(pageId) {
+        document.getElementById('login-page').classList.add('hidden');
+        document.getElementById('admin-page').classList.add('hidden');
+        document.getElementById('student-page').classList.add('hidden');
+        document.getElementById(pageId).classList.remove('hidden');
+
+        if (pageId === 'admin-page') {
+            document.getElementById('current-date').textContent = today;
+            renderAll();
+        }
+        if (pageId === 'login-page') {
+            document.getElementById('studentIdLogin').value = '';
+        }
+    }
+
+    // Initial Load
+    loadData();
+    showPage('login-page');
+});
+</script>
+
+</body>
+</html>
